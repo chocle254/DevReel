@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevReel — Technical Specification</title>
+<style>
+:root{--bg:#08090d;--panel:#11131a;--panel2:#171a23;--text:#f4f5f7;--muted:#9da3b1;--line:#292e3a;--accent:#8b7cff;--accent2:#55d6be;--warn:#f2c66d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.7 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:#b9b0ff;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:0 24px}
+.hero{padding:72px 0 48px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 80% 10%,#27214d 0,transparent 35%),radial-gradient(circle at 10% 20%,#123d3a 0,transparent 30%)}
+.eyebrow{color:var(--accent2);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+h1{font-size:clamp(42px,7vw,76px);line-height:1;margin:14px 0}.tag{font-size:20px;color:var(--muted);max-width:720px}
+.status{display:inline-block;margin-top:24px;padding:7px 12px;border:1px solid #4a426e;border-radius:999px;background:#17142a;color:#c9c2ff;font-weight:700}
+.layout{display:grid;grid-template-columns:230px 1fr;gap:42px;padding-top:34px}.toc{position:sticky;top:18px;height:max-content}.toc a{display:block;padding:7px 0;color:var(--muted)}.toc a:hover{color:var(--text)}
+main{min-width:0}section{padding:18px 0 42px;border-bottom:1px solid var(--line)}h2{font-size:30px;margin:0 0 18px}h3{font-size:20px;margin:26px 0 10px}p{color:#d1d5dd}ul{color:#d1d5dd}code{background:#0d0f14;padding:2px 6px;border-radius:5px;color:#d9d4ff}pre{background:#0b0d12;border:1px solid var(--line);padding:18px;border-radius:12px;overflow:auto;color:#d9dde6}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:22px 0}.node{padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-weight:700}.arrow{color:var(--accent);font-size:20px}
+.arch{display:grid;gap:14px;margin:24px 0}.box{padding:18px;border:1px solid var(--line);background:linear-gradient(145deg,var(--panel),var(--panel2));border-radius:16px}.box strong{display:block;font-size:18px}.box small{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.card{padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.card b{display:block;margin-bottom:6px}.muted{color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:18px 0}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);vertical-align:top}th{color:#fff;background:#11131a}
+.callout{border-left:3px solid var(--accent);padding:14px 18px;background:#10101a;border-radius:0 10px 10px 0;margin:20px 0}.warn{border-left-color:var(--warn)}
+footer{padding:40px 0;color:var(--muted)}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.toc{position:static;display:grid;grid-template-columns:1fr 1fr;gap:0 16px;border-bottom:1px solid var(--line);padding-bottom:20px}.toc a{padding:4px 0}}
+</style>
+</head>
+<body>
+<header class="hero">
+<div class="wrap">
+<div class="eyebrow">Build With AI: Basics · Technical Specification</div>
+<h1>DevReel</h1>
+<div class="tag">Turn your code into a story worth watching.</div>
+<span class="status">DRAFT — canonical spec is devpost/spec.md</span>
+</div>
+</header>
+
+<div class="wrap layout">
+<nav class="toc" aria-label="Table of contents">
+<a href="#plain">1. How it works</a>
+<a href="#journey">2. Core journey</a>
+<a href="#stack">3. Stack</a>
+<a href="#runtime">4. Runtime</a>
+<a href="#look">5. Look & feel</a>
+<a href="#components">6. Components</a>
+<a href="#data">7. Data model</a>
+<a href="#files">8. File structure</a>
+<a href="#services">9. Services</a>
+<a href="#failures">10. Failures</a>
+<a href="#simplified">11. Simplified</a>
+<a href="#decisions">12. Decisions</a>
+</nav>
+
+<main>
+<section id="plain">
+<h2>1. How This Works, In Plain Language</h2>
+<p>DevReel takes a public GitHub repository and turns the software inside it into a short cinematic project explanation. It reads the actual source code as evidence, understands the project's purpose and system flow, creates a story and visual plan, renders that plan as controlled React/HTML/SVG animation, records the animation with Playwright, and assembles narration and music with FFmpeg.</p>
+<div class="flow">
+<div class="node">GitHub</div><div class="arrow">→</div><div class="node">Repository Analysis</div><div class="arrow">→</div><div class="node">Project Understanding</div><div class="arrow">→</div><div class="node">Story + Visual Plan</div><div class="arrow">→</div><div class="node">Animated Explainer</div>
+</div>
+<div class="callout"><strong>Core principle:</strong> AI decides what should be communicated. DevReel decides how that communication is rendered.</div>
+</section>
+
+<section id="journey">
+<h2>2. Core Journey Through the System</h2>
+<div class="grid">
+<div class="card"><b>Dashboard</b><span class="muted">Library of generated reels, empty state, and New Reel.</span></div>
+<div class="card"><b>New Reel</b><span class="muted">Single public GitHub repository URL input.</span></div>
+<div class="card"><b>Analysis</b><span class="muted">Clone and inspect source files without executing the submitted project.</span></div>
+<div class="card"><b>Understanding</b><span class="muted">Purpose, problem, solution, users, features, technologies, flow, and evidence.</span></div>
+<div class="card"><b>Story Planning</b><span class="muted">Problem → solution → how it works → features → technology → impact → closing.</span></div>
+<div class="card"><b>Rendering</b><span class="muted">Validated scene JSON becomes deterministic animated scenes.</span></div>
+<div class="card"><b>Audio</b><span class="muted">Narration plus AI-selected track from a curated music catalog.</span></div>
+<div class="card"><b>Reel</b><span class="muted">Playable MP4, project details, and expandable connection chart.</span></div>
+</div>
+<h3>Generation pipeline</h3>
+<pre>Repository
+  ↓
+Evidence extraction
+  ↓
+AI project understanding
+  ↓
+Story + scene specification
+  ↓
+Quality/schema validation
+  ↓
+Next.js scene renderer
+  ↓
+Playwright + Chromium capture
+  ↓
+Narration + music
+  ↓
+FFmpeg assembly
+  ↓
+Backblaze B2
+  ↓
+Reel Player</pre>
+</section>
+
+<section id="stack">
+<h2>3. Stack</h2>
+<div class="grid">
+<div class="card"><b>Frontend</b><span class="muted">Next.js + React + HTML/CSS/SVG</span></div>
+<div class="card"><b>Backend</b><span class="muted">Python + FastAPI</span></div>
+<div class="card"><b>AI</b><span class="muted">NVIDIA NIM — Nemotron 3.5 Lightning 30B A3B</span></div>
+<div class="card"><b>TTS</b><span class="muted">NVIDIA NIM-compatible text-to-speech</span></div>
+<div class="card"><b>Capture</b><span class="muted">Playwright + Chromium</span></div>
+<div class="card"><b>Video</b><span class="muted">FFmpeg</span></div>
+<div class="card"><b>Database</b><span class="muted">Supabase / PostgreSQL</span></div>
+<div class="card"><b>Storage</b><span class="muted">Backblaze B2</span></div>
+<div class="card"><b>Hosting</b><span class="muted">Vercel frontend + Railway backend</span></div>
+<div class="card"><b>Progress</b><span class="muted">Server-Sent Events</span></div>
+</div>
+</section>
+
+<section id="runtime">
+<h2>4. Where It Runs and How Someone Tries It</h2>
+<div class="arch">
+<div class="box"><strong>User → Vercel / Next.js</strong><small>Dashboard, New Reel, generation UI, reel player, project chart, and scene renderer.</small></div>
+<div class="box"><strong>Vercel → Railway / FastAPI</strong><small>API requests and SSE progress updates.</small></div>
+<div class="box"><strong>Railway generation worker</strong><small>Repository scanner, AI analysis, story generation, TTS, music selection, Playwright, and FFmpeg.</small></div>
+<div class="box"><strong>Railway → Supabase + Backblaze B2</strong><small>Metadata in PostgreSQL; final media in object storage.</small></div>
+</div>
+<h3>Demo path</h3>
+<pre>Open DevReel
+→ New Reel
+→ Paste public GitHub URL
+→ Generate
+→ Watch live analysis
+→ Watch generated explainer
+→ Expand project chart
+→ Return to dashboard
+→ Show generated reel in library</pre>
+<div class="callout warn"><strong>Security boundary:</strong> submitted repositories are treated as untrusted text. The PoC must never execute repository code, install its dependencies, run its scripts, or run its tests.</div>
+</section>
+
+<section id="look">
+<h2>5. Look and Feel</h2>
+<p>The product should feel like a cinematic presentation tool rather than a developer utility.</p>
+<div class="grid">
+<div class="card"><b>Cinematic</b>Dark premium interface, strong typography, high contrast.</div>
+<div class="card"><b>Focused</b>One communication goal per scene and limited on-screen text.</div>
+<div class="card"><b>Visual</b>Nodes, flows, cards, code fragments, timelines, metrics, and progressive reveals.</div>
+<div class="card"><b>Satisfying</b>Smooth transitions and a generated reel treated as the centerpiece.</div>
+</div>
+</section>
+
+<section id="components">
+<h2>6. Components</h2>
+<h3>Frontend</h3>
+<pre>Dashboard
+ReelCard
+EmptyLibrary
+NewReelForm
+GenerationProgress
+ProgressBar
+ActivityLog
+ErrorCard
+ReelPlayer
+ProjectDetails
+ProjectChart
+DeleteConfirmation
+RenderScene</pre>
+<h3>Scene types</h3>
+<pre>ProblemScene
+SolutionScene
+FlowScene
+FeatureScene
+TechnologyScene
+ImpactScene
+ClosingScene</pre>
+<h3>Backend responsibilities</h3>
+<pre>API
+Job Manager
+Repository Scanner
+Repository Evidence Extractor
+Project Analyzer
+Story Generator
+Story Validator
+Scene Validator
+TTS Service
+Music Catalog
+Renderer Orchestrator
+Playwright Capture
+FFmpeg Assembler
+B2 Storage
+Supabase Repository</pre>
+</section>
+
+<section id="data">
+<h2>7. Data Model</h2>
+<h3>reels</h3>
+<pre>id
+session_id
+repo_url
+repo_name
+status
+title
+summary
+project_understanding_json
+scene_spec_json
+chart_json
+video_key
+thumbnail_key
+duration_seconds
+error_message
+created_at
+updated_at</pre>
+<h3>Lifecycle</h3>
+<div class="flow">
+<div class="node">queued</div><div class="arrow">→</div><div class="node">analyzing</div><div class="arrow">→</div><div class="node">planning</div><div class="arrow">→</div><div class="node">rendering</div><div class="arrow">→</div><div class="node">assembling</div><div class="arrow">→</div><div class="node">completed</div>
+</div>
+<p>Failure can occur at any stage and produces a controlled <code>failed</code> state. Anonymous <code>session_id</code> is a PoC association mechanism, not production-grade authentication.</p>
+</section>
+
+<section id="files">
+<h2>8. File Structure</h2>
+<pre>DevReel/
+├── frontend/
+│   ├── app/
+│   │   ├── dashboard/
+│   │   ├── new/
+│   │   ├── generate/
+│   │   ├── reels/
+│   │   └── render/[reelId]/[sceneIndex]/
+│   ├── components/
+│   │   ├── dashboard/
+│   │   ├── generation/
+│   │   ├── reel/
+│   │   ├── chart/
+│   │   └── scenes/
+│   ├── lib/
+│   └── public/assets/
+├── backend/
+│   ├── api/
+│   ├── services/
+│   ├── models/
+│   ├── prompts/
+│   ├── music/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── Dockerfile
+├── devpost/
+│   ├── learner-profile.md
+│   ├── scope.md
+│   ├── prd.md
+│   ├── spec.md
+│   └── spec.html
+├── .env.example
+├── .gitignore
+└── README.md</pre>
+</section>
+
+<section id="services">
+<h2>9. External Services and Dependencies</h2>
+<table>
+<thead><tr><th>Service</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>GitHub</td><td>Public repository input.</td></tr>
+<tr><td>NVIDIA NIM</td><td>Repository understanding, story planning, validation, and selection.</td></tr>
+<tr><td>NVIDIA TTS</td><td>Generated narration.</td></tr>
+<tr><td>Supabase</td><td>PostgreSQL metadata.</td></tr>
+<tr><td>Backblaze B2</td><td>Final media storage.</td></tr>
+<tr><td>Railway</td><td>FastAPI and long-running generation worker.</td></tr>
+<tr><td>Vercel</td><td>Next.js frontend and scene-rendering routes.</td></tr>
+<tr><td>Playwright</td><td>Deterministic Chromium capture.</td></tr>
+<tr><td>FFmpeg</td><td>Video and audio assembly.</td></tr>
+<tr><td>Pixabay</td><td>Source for a small curated royalty-free music catalog.</td></tr>
+</tbody>
+</table>
+<p class="muted">The canonical Markdown spec contains official documentation links for these dependencies.</p>
+</section>
+
+<section id="failures">
+<h2>10. Important Failure Modes</h2>
+<div class="grid">
+<div class="card"><b>Invalid URL</b>Reject before generation and explain how to correct it.</div>
+<div class="card"><b>Repository inaccessible</b>Private, deleted, unavailable, or unclonable repositories become failed jobs.</div>
+<div class="card"><b>Repository too large</b>Explicit limits stop excessive processing.</div>
+<div class="card"><b>AI failure</b>Validate structured output and allow one controlled retry.</div>
+<div class="card"><b>Rendering failure</b>Playwright capture errors become a failed generation.</div>
+<div class="card"><b>FFmpeg failure</b>Assembly failure prevents false completion and triggers cleanup.</div>
+<div class="card"><b>Storage failure</b>B2 upload can retry; completion requires successful storage.</div>
+</div>
+</section>
+
+<section id="simplified">
+<h2>11. What Was Simplified and Why</h2>
+<ul>
+<li>No authentication — keeps the PoC focused.</li>
+<li>Public GitHub repositories only — avoids GitHub permission complexity.</li>
+<li>Curated music — avoids unnecessary runtime music-search complexity.</li>
+<li>No sound effects — narration, animation, and music prove the audiovisual concept.</li>
+<li>No full video editor — automated explanation is the differentiator.</li>
+<li>No generative video model — structured animation is cheaper, controllable, and consistent.</li>
+<li>Limited scene library — makes visual quality easier to maintain.</li>
+<li>Representative repositories — proves the general approach without claiming perfect every-repo support.</li>
+<li>No production accounts, billing, teams, or enterprise controls.</li>
+</ul>
+</section>
+
+<section id="decisions">
+<h2>12. Decisions and Open Issues</h2>
+<table>
+<thead><tr><th>Decision</th><th>Choice</th></tr></thead>
+<tbody>
+<tr><td>Frontend</td><td>Next.js + React</td></tr>
+<tr><td>Backend</td><td>FastAPI + Python</td></tr>
+<tr><td>Long-running generation</td><td>Railway</td></tr>
+<tr><td>Frontend hosting</td><td>Vercel</td></tr>
+<tr><td>Progress</td><td>Server-Sent Events</td></tr>
+<tr><td>AI</td><td>NVIDIA Nemotron 3.5 Lightning 30B A3B</td></tr>
+<tr><td>Browser rendering</td><td>Playwright + Chromium</td></tr>
+<tr><td>Video assembly</td><td>FFmpeg</td></tr>
+<tr><td>Database</td><td>Supabase / PostgreSQL</td></tr>
+<tr><td>Object storage</td><td>Backblaze B2</td></tr>
+<tr><td>Music</td><td>Curated Pixabay catalog</td></tr>
+<tr><td>Authentication</td><td>Deferred</td></tr>
+<tr><td>Sound effects</td><td>Deferred</td></tr>
+<tr><td>Full editor</td><td>Deferred</td></tr>
+<tr><td>Generative video</td><td>Deferred</td></tr>
+</tbody>
+</table>
+<h3>Open implementation issues</h3>
+<ul>
+<li>Validate Railway resources once Playwright and FFmpeg run together.</li>
+<li>Confirm the exact NVIDIA TTS request/response shape during implementation.</li>
+<li>Use a short-lived token for protected renderer access.</li>
+<li>Choose repository limits based on actual PoC workloads.</li>
+<li>Expose <code>window.__DEVREEL_READY__ = true</code> only after fonts, assets, scene data, and initial animation state are ready.</li>
+</ul>
+<div class="callout"><strong>Final architecture:</strong> AI understands software and decides how that software should be explained; a controlled renderer turns that explanation into a polished audiovisual story.</div>
+</section>
+</main>
+</div>
+
+<footer class="wrap">
+DevReel · Technical Specification · Draft · The Markdown file <code>devpost/spec.md</code> is the canonical version.
+</footer>
+</body>
+</html>
