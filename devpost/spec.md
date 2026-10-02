@@ -827,7 +827,6 @@ DevReel/
 │   └── Dockerfile
 │
 ├── devpost/
-│   ├── learner-profile.md
 │   ├── scope.md
 │   ├── prd.md
 │   ├── spec.md
