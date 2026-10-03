@@ -1,6 +1,6 @@
 # DevReel — Frontend ↔ Backend Contract (v1)
 
-Backend: FastAPI. Base URL = `NEXT_PUBLIC_API_URL` (local: `http://localhost:8000`).
+Backend: FastAPI. Frontend backend URL = `VITE_API_URL` (local backend: `http://localhost:8000`).
 All JSON. All timestamps ISO-8601 UTC. Every API route is under `/api`.
 
 ## 0. Session
@@ -151,7 +151,7 @@ CORS: backend allows the origins in `FRONTEND_ORIGINS`.
 
 ## 5. Render route (used by Playwright — frontend must implement)
 
-Frontend route: **`/render/[reelId]/[sceneIndex]?token=…`** (Next.js page, no app chrome/navigation).
+Frontend route: **`/render/:reelId/:sceneIndex?token=…`** (Vite/React route, no app chrome/navigation).
 
 Flow:
 1. Playwright opens `{FRONTEND_URL}/render/{reelId}/{sceneIndex}?token={token}`.
