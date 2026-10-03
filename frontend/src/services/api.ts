@@ -18,7 +18,7 @@ function safeSetStorage(key: string, value: string): void {
   }
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || '').replace(/\\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
 function requireApiBase(): string {
   if (!API_BASE) {
@@ -85,7 +85,7 @@ export const api = {
 
   async createReel(repoUrl: string): Promise<Reel> {
     const normalized = repoUrl.trim();
-    const urlPattern = /^https?:\\/\\/(www\\.)?github\\.com\\/[\\w.-]+\\/[\\w.-]+(?:\\/)?$/i;
+    const urlPattern = /^https?:\/\/(www\.)?github\.com\/[\w.-]+\/[\w.-]+(?:\/)?$/i;
     if (!urlPattern.test(normalized)) {
       throw {
         code: 'invalid_url',
