@@ -1,4 +1,4 @@
-import type { Reel, Scene } from '../types/contract';
+import type { Reel } from '../types/contract';
 
 export const CHOCLE_DEVREEL: Reel = {
   id: 'reel-devreel-demo-01',
