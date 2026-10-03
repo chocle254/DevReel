@@ -117,6 +117,8 @@ export interface ReelLog {
   message: string;
 }
 
+export type BackendMusicTrack = string;
+
 export interface MusicTrack {
   id: string;
   name: string;
@@ -139,7 +141,7 @@ export interface Reel {
   understanding: ProjectUnderstanding | null;
   scenes: Scene[];
   chart: ProjectChart | null;
-  music_track: MusicTrack | null;
+  music_track: MusicTrack | BackendMusicTrack | null;
   video_url: string | null;
   thumbnail_url: string | null;
   duration_seconds: number | null;
