@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .config import get_settings
 from .media import ffmpeg
+from .models import PipelineError
 
 # (chord frequencies in Hz, tremolo rate) per mood for the placeholder pads
 _SYNTH = {
@@ -38,6 +39,19 @@ def _synthesise(track: dict, out: Path) -> None:
         "volume=0.9,afade=t=in:d=3"
     )
     ffmpeg([*inputs, "-filter_complex", chain, "-c:a", "libmp3lame", "-q:a", "5", str(out)], timeout=120)
+
+
+def get_track(track_id: str) -> tuple[str, Path]:
+    s = get_settings()
+    catalog = load_catalog()
+    track = next((t for t in catalog if t["id"] == track_id), None)
+    if track is None:
+        raise PipelineError("music_failed", "The saved soundtrack is no longer available.", False)
+    path = s.music_dir / track["file"]
+    if not path.exists() or path.stat().st_size == 0:
+        s.music_dir.mkdir(parents=True, exist_ok=True)
+        _synthesise(track, path)
+    return track["id"], path
 
 
 def select_track(mood: str) -> tuple[str, Path]:
