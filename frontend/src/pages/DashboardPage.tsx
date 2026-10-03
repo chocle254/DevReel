@@ -10,13 +10,8 @@ import {
   Trash2,
   Clock,
   Search,
-  Filter,
   Sparkles,
   Github,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
