@@ -114,7 +114,8 @@ export const ReelPlayer: React.FC<Props> = ({
   // Handle ambient soundtrack
   useEffect(() => {
     if (isPlaying && musicEnabled && !isMuted) {
-      audioPlayer.startSoundtrack(reel.music_track?.mood || 'Cinematic');
+      const musicMood = typeof reel.music_track === 'string' ? reel.music_track : reel.music_track?.mood || 'Cinematic';
+      audioPlayer.startSoundtrack(musicMood);
     } else {
       audioPlayer.stopSoundtrack();
     }
