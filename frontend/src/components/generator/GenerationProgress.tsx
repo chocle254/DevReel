@@ -18,6 +18,7 @@ import {
 interface Props {
   reel: Reel;
   onRetry: () => void;
+  onContinue: () => void;
   onViewCompleted: () => void;
 }
 
@@ -32,7 +33,7 @@ const STAGES: { status: ReelStatus; label: string; icon: any; range: string }[] 
   { status: 'uploading', label: 'Finalizing explainer reel', icon: Sparkles, range: '96-100%' },
 ];
 
-export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompleted }) => {
+export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onContinue, onViewCompleted }) => {
   const isFailed = reel.status === 'failed';
   const isCompleted = reel.status === 'completed';
 
@@ -255,13 +256,22 @@ export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompl
                 </p>
               </div>
             </div>
-            <button
-              onClick={onRetry}
-              className="neu-btn px-4 py-2 text-xs flex items-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Retry</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onContinue}
+                className="neu-btn-primary px-4 py-2 text-xs flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Continue</span>
+              </button>
+              <button
+                onClick={onRetry}
+                className="neu-btn px-4 py-2 text-xs flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Start over</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
