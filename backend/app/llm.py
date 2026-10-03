@@ -104,16 +104,49 @@ async def chat_model(
     problems: list[str] = []
     for attempt in range(2):
         text = await chat(messages, temperature=temperature if attempt == 0 else 0.1)
+        logger.info(
+            "Structured LLM attempt %s/2 returned %s characters for %s",
+            attempt + 1,
+            len(text),
+            model_cls.__name__,
+        )
         try:
             raw = extract_json(text)
+            logger.info(
+                "Structured LLM attempt %s/2 JSON extraction succeeded for %s",
+                attempt + 1,
+                model_cls.__name__,
+            )
             if repair:
                 raw = repair(raw)
+                logger.info(
+                    "Structured LLM attempt %s/2 repair pass completed for %s",
+                    attempt + 1,
+                    model_cls.__name__,
+                )
             obj = model_cls.model_validate(raw)
             problems = validate(obj) if validate else []
             if not problems:
+                logger.info(
+                    "Structured LLM attempt %s/2 accepted for %s",
+                    attempt + 1,
+                    model_cls.__name__,
+                )
                 return obj
+            logger.warning(
+                "Structured LLM attempt %s/2 quality gate rejected %s: %s",
+                attempt + 1,
+                model_cls.__name__,
+                " | ".join(problems[:8]),
+            )
         except (ValueError, ValidationError) as e:
             problems = [_short(e)]
+            logger.warning(
+                "Structured LLM attempt %s/2 rejected %s during parsing/validation: %s",
+                attempt + 1,
+                model_cls.__name__,
+                " | ".join(problems[:8]),
+            )
         if attempt == 0:
             messages = messages + [
                 {"role": "assistant", "content": text[:6000]},
