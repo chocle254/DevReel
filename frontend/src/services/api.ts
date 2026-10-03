@@ -107,6 +107,14 @@ export const api = {
     return res.json();
   },
 
+  async continueReel(id: string): Promise<Reel> {
+    const res = await fetch(`${requireApiBase()}/api/reels/${encodeURIComponent(id)}/continue`, {
+      method: 'POST',
+    });
+    if (!res.ok) return parseApiError(res);
+    return res.json();
+  },
+
   async regenerateReel(id: string): Promise<Reel> {
     const res = await fetch(`${requireApiBase()}/api/reels/${encodeURIComponent(id)}/regenerate`, {
       method: 'POST',
