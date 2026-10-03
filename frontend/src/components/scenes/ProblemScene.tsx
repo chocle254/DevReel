@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Scene } from '@/types/contract';
-import { AlertTriangle, Flame, ShieldAlert, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface Props {
