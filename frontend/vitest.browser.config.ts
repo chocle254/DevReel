@@ -28,7 +28,7 @@ export default defineConfig({
       NODE_ENV: "test",
     },
     include: ["**/*.browser.test.*"],
-    setupFiles: ["./src/__tests__/setup.browser.ts"],
+    setupFiles: ["./setup.browser.ts"],
     browser: {
       enabled: true,
       screenshotFailures: false,
