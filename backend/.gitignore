@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+outputs/
+.pytest_cache/
+# synthesized placeholder music is regenerated on demand; commit real tracks deliberately
+music/*.mp3
+!music/real_*.mp3

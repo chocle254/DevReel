@@ -1,0 +1,6 @@
+[
+  {"id": "cinematic_01", "mood": "cinematic", "energy": "medium", "source": "synth-placeholder", "file": "cinematic_01.mp3"},
+  {"id": "uplifting_01", "mood": "uplifting", "energy": "high", "source": "synth-placeholder", "file": "uplifting_01.mp3"},
+  {"id": "tech_01", "mood": "tech", "energy": "medium", "source": "synth-placeholder", "file": "tech_01.mp3"},
+  {"id": "calm_01", "mood": "calm", "energy": "low", "source": "synth-placeholder", "file": "calm_01.mp3"}
+]
