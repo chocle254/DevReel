@@ -157,8 +157,11 @@ async def _run(reel_id: str) -> None:
 
     # -------------------------------------------------------------------- music
     _stage(reel_id, "selecting_music", 59, "Choosing background music")
-    mood = plan.music_mood or "cinematic"
-    track_id, track_path = await asyncio.to_thread(music.select_track, mood)
+    if reel.music_track:
+        track_id, track_path = await asyncio.to_thread(music.get_track, reel.music_track)
+    else:
+        mood = plan.music_mood or "cinematic"
+        track_id, track_path = await asyncio.to_thread(music.select_track, mood)
     store.update(reel_id, music_track=track_id)
     store.log(reel_id, f"Music: {track_id}")
 
