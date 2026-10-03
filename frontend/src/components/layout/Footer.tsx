@@ -1,5 +1,5 @@
 import React from 'react';
-import { Film, Github, Sparkles, Heart } from 'lucide-react';
+import { Film, Github } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
