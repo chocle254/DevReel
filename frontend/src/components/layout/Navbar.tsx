@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Film, Plus, Github, Sparkles, BookOpen } from 'lucide-react';
+import { Film, Plus, Github } from 'lucide-react';
 import { getSessionId } from '@/services/api';
 
 export const Navbar: React.FC = () => {
