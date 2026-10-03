@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import Any, Type, TypeVar
 
@@ -12,6 +13,8 @@ from .config import get_settings
 from .models import PipelineError
 
 T = TypeVar("T", bound=BaseModel)
+
+logger = logging.getLogger("devreel.llm")
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.S)
 
@@ -43,8 +46,10 @@ async def chat(messages: list[dict[str, str]], *, temperature: float = 0.3) -> s
             return data["choices"][0]["message"]["content"] or ""
         except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
             last = e
+            logger.warning("LLM request failed (attempt %s/2): %s", attempt + 1, e)
             if attempt == 0:
                 continue
+    logger.error("LLM request failed after retries: %s", last)
     raise PipelineError("ai_failed", "The AI service couldn't be reached. Please try again.", False) from last
 
 
