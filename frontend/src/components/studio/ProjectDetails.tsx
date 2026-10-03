@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ProjectUnderstanding, Reel } from '@/types/contract';
+import type { Reel } from '@/types/contract';
 import { FileCode, CheckCircle2, Target, Lightbulb, AlertTriangle, Layers, Github, ExternalLink } from 'lucide-react';
 
 interface Props {
