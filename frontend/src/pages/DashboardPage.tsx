@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
-import type { Reel, ReelSummary } from '@/types/contract';
+import type { ReelSummary } from '@/types/contract';
 import {
   Film,
   Plus,
