@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Reel, ReelStatus } from '@/types/contract';
 import {
   GitBranch,
@@ -41,6 +41,65 @@ export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompl
   };
 
   const currentIdx = getStageIndex(reel.status);
+  const currentStage = STAGES[Math.max(0, currentIdx)] ?? STAGES[0];
+
+  const ACTIVITY_MESSAGES: Record<ReelStatus, string[]> = {
+    queued: ['Preparing the generation pipeline...', 'Getting your project ready...'],
+    analyzing: [
+      'Reading the project structure...',
+      'Finding the pieces that make the product work...',
+      'Connecting features, data, and user flows...',
+    ],
+    planning: [
+      'Finding the story inside your codebase...',
+      'Turning the project understanding into a visual narrative...',
+      'Structuring the journey from problem to solution...',
+    ],
+    generating_narration: [
+      'Giving each scene a voice...',
+      'Matching narration to the story beats...',
+      'Preparing the voiceover for the reel...',
+    ],
+    selecting_music: [
+      'Finding a soundtrack that fits the story...',
+      'Setting the mood for your explainer...',
+    ],
+    rendering: [
+      'Bringing the story to life...',
+      'Rendering the animated scenes...',
+      'Turning the scene plan into visuals...',
+    ],
+    assembling: [
+      'Combining scenes, narration, and music...',
+      'Polishing the final sequence...',
+      'Putting the finished reel together...',
+    ],
+    uploading: [
+      'Putting the finishing touches on your reel...',
+      'Preparing your finished explainer...',
+    ],
+    completed: ['Your DevReel is ready.'],
+    failed: ['The generation needs attention.'],
+  };
+
+  const [activityIndex, setActivityIndex] = useState(0);
+
+  useEffect(() => {
+    setActivityIndex(0);
+    if (isFailed || isCompleted) return;
+
+    const messages = ACTIVITY_MESSAGES[reel.status] ?? ['Working on your DevReel...'];
+    if (messages.length < 2) return;
+
+    const timer = window.setInterval(() => {
+      setActivityIndex((index) => (index + 1) % messages.length);
+    }, 3200);
+
+    return () => window.clearInterval(timer);
+  }, [reel.status, isFailed, isCompleted]);
+
+  const activityMessages = ACTIVITY_MESSAGES[reel.status] ?? ['Working on your DevReel...'];
+  const activityMessage = activityMessages[activityIndex % activityMessages.length];
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
@@ -71,7 +130,49 @@ export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompl
           </div>
         </div>
 
+        {!isFailed && !isCompleted && (
+          <div className="mb-7 rounded-2xl border border-primary/15 bg-primary/[0.035] p-4 md:p-5 overflow-hidden relative">
+            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-[generation-shimmer_2.8s_ease-in-out_infinite]" />
+            <div className="relative flex items-center gap-4">
+              <div className="relative w-11 h-11 shrink-0 rounded-2xl neu-pressed flex items-center justify-center text-primary">
+                <currentStage.icon className="w-5 h-5" />
+                <span className="absolute inset-0 rounded-2xl border border-primary/30 animate-pulse" />
+                <span className="absolute -right-1 -top-1 flex gap-0.5">
+                  <span className="w-1 h-1 rounded-full bg-primary animate-bounce" />
+                  <span className="w-1 h-1 rounded-full bg-primary/60 animate-bounce [animation-delay:120ms]" />
+                  <span className="w-1 h-1 rounded-full bg-primary/30 animate-bounce [animation-delay:240ms]" />
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
+                    DevReel is working
+                  </span>
+                  <span className="flex gap-1">
+                    <span className="w-1 h-1 rounded-full bg-primary/80 animate-pulse" />
+                    <span className="w-1 h-1 rounded-full bg-primary/50 animate-pulse [animation-delay:200ms]" />
+                    <span className="w-1 h-1 rounded-full bg-primary/30 animate-pulse [animation-delay:400ms]" />
+                  </span>
+                </div>
+                <p className="mt-1 text-sm md:text-[15px] font-semibold text-foreground">
+                  {activityMessage}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {currentStage.label} · This can take a few minutes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Global Progress Bar */}
+        <style>{`
+          @keyframes generation-shimmer {
+            0% { transform: translateX(-120%); }
+            55%, 100% { transform: translateX(420%); }
+          }
+        `}</style>
+
         <div className="w-full h-3 rounded-full neu-track overflow-hidden mb-8 p-0.5">
           <div
             className={`h-full rounded-full transition-all duration-500 ease-out ${
@@ -201,3 +302,6 @@ export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompl
     </div>
   );
 };
+
+/* Scoped animation used by the live generation indicator. */
+
