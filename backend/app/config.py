@@ -16,14 +16,14 @@ class Settings(BaseSettings):
     llm_base_url: str = "https://integrate.api.nvidia.com/v1"
     llm_api_key: str = ""
     # Verify the exact model id on build.nvidia.com before the first real run.
-    llm_model: str = "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+    llm_model: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
     llm_timeout_seconds: float = 120.0
     llm_max_tokens: int = 4096
 
     # --- URLs / CORS ---
     public_api_url: str = "http://localhost:8000"  # used to build absolute video/thumbnail URLs
-    frontend_url: str = "http://localhost:3000"  # Playwright opens {frontend_url}/render/...
-    frontend_origins: str = "http://localhost:3000"  # comma separated CORS origins
+    frontend_url: str = "http://localhost:5173"  # Playwright opens {frontend_url}/render/...
+    frontend_origins: str = "http://localhost:5173"  # comma separated CORS origins
 
     # --- Render access ---
     render_secret: str = "dev-only-change-me"
