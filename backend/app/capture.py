@@ -44,7 +44,7 @@ def _encode_clip(webm: Path, offset: float, duration: float, out: Path) -> None:
     )
 
 
-def _capture_playwright(reel_id: str, scenes: list[Scene], work: Path, token: str, on_progress) -> list[Path]:
+def _capture_playwright(reel_id: str, scenes: list[Scene], work: Path, token: str, on_progress, resume: bool = False) -> list[Path]:
     from playwright.sync_api import Error as PlaywrightError
     from playwright.sync_api import TimeoutError as PlaywrightTimeout
     from playwright.sync_api import sync_playwright
@@ -64,6 +64,12 @@ def _capture_playwright(reel_id: str, scenes: list[Scene], work: Path, token: st
             )
             try:
                 for i, sc in enumerate(scenes):
+                    clip = work / f"clip_{sc.index}.mp4"
+                    if resume and clip.exists() and probe_duration(clip) >= sc.duration_seconds - 0.6:
+                        clips.append(clip)
+                        if on_progress:
+                            on_progress(i + 1, len(scenes))
+                        continue
                     url = f"{base}/render/{reel_id}/{sc.index}?token={quote(token)}"
                     size = {"width": s.video_width, "height": s.video_height}
                     ctx = browser.new_context(viewport=size, record_video_dir=str(raw_dir), record_video_size=size)
@@ -110,12 +116,17 @@ def _capture_playwright(reel_id: str, scenes: list[Scene], work: Path, token: st
 
 
 # ---------------------------------------------------------------------- mock
-def _capture_mock(scenes: list[Scene], work: Path, on_progress) -> list[Path]:
+def _capture_mock(scenes: list[Scene], work: Path, on_progress, resume: bool = False) -> list[Path]:
     s = get_settings()
     font = next((f for f in _FONT_CANDIDATES if Path(f).exists()), None)
     clips: list[Path] = []
     for i, sc in enumerate(scenes):
         out = work / f"clip_{sc.index}.mp4"
+        if resume and out.exists() and probe_duration(out) >= sc.duration_seconds - 0.6:
+            clips.append(out)
+            if on_progress:
+                on_progress(i + 1, len(scenes))
+            continue
         color = _MOCK_COLORS[i % len(_MOCK_COLORS)]
         src = f"color=c={color}:s={s.video_width}x{s.video_height}:r={s.video_fps}:d={sc.duration_seconds}"
         base = ["-f", "lavfi", "-i", src]
@@ -141,14 +152,14 @@ def _capture_mock(scenes: list[Scene], work: Path, on_progress) -> list[Path]:
     return clips
 
 
-def capture_scenes(reel_id: str, scenes: list[Scene], work: Path, token: str, on_progress=None) -> list[Path]:
+def capture_scenes(reel_id: str, scenes: list[Scene], work: Path, token: str, on_progress=None, resume: bool = False) -> list[Path]:
     """Blocking. Call via asyncio.to_thread."""
     work.mkdir(parents=True, exist_ok=True)
     s = get_settings()
     if s.capture_mode == "mock":
-        clips = _capture_mock(scenes, work, on_progress)
+        clips = _capture_mock(scenes, work, on_progress, resume)
     else:
-        clips = _capture_playwright(reel_id, scenes, work, token, on_progress)
+        clips = _capture_playwright(reel_id, scenes, work, token, on_progress, resume)
     for clip, sc in zip(clips, scenes):
         d = probe_duration(clip)
         if d < sc.duration_seconds - 0.6:
