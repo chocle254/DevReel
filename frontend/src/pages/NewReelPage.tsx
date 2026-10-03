@@ -18,17 +18,34 @@ export const NewReelPage: React.FC = () => {
   useEffect(() => {
     if (!existingReelId) return;
 
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+
     api
       .getReel(existingReelId)
       .then((reel) => {
+        if (cancelled) return;
         setActiveReel(reel);
-        startListening(reel.id);
+
+        if (reel.status === 'completed') {
+          navigate(`/reel/${reel.id}`);
+          return;
+        }
+
+        if (reel.status !== 'failed') {
+          unsubscribe = startListening(reel.id);
+        }
       })
       .catch((err) => {
         console.error('Failed to load existing reel', err);
-        toast.error('Could not resume reel generation');
+        toast.error(err?.message || 'Could not resume reel generation');
       });
-  }, [existingReelId]);
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  }, [existingReelId, navigate]);
 
   const startListening = (reelId: string) => {
     const unsub = api.subscribeToReelEvents(
