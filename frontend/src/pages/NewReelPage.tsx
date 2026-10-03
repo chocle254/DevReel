@@ -86,6 +86,21 @@ export const NewReelPage: React.FC = () => {
     }
   };
 
+  const handleContinue = async () => {
+    if (!activeReel) return;
+    try {
+      setIsSubmitting(true);
+      const continued = await api.continueReel(activeReel.id);
+      setActiveReel(continued);
+      toast.info('Continuing from the latest saved checkpoint');
+      startListening(continued.id);
+    } catch (err: any) {
+      toast.error(err.message || 'Could not continue generation');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-10">
       {!activeReel ? (
@@ -94,6 +109,7 @@ export const NewReelPage: React.FC = () => {
         <GenerationProgress
           reel={activeReel}
           onRetry={handleRetry}
+          onContinue={handleContinue}
           onViewCompleted={() => navigate(`/reel/${activeReel.id}`)}
         />
       )}
