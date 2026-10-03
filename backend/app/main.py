@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from .config import get_settings
 from .models import CreateReelRequest, PipelineError
-from .pipeline import run_reel
+from .pipeline import STAGE_LABELS, run_reel
 from .github import parse_repo_url
 from .security import verify_render_token
 from .store import get_store
@@ -221,6 +221,28 @@ async def delete_reel(reel_id: str):
         raise ApiError(409, "in_progress", "This reel is still generating. Try again when it finishes.", True)
     get_store().delete(reel_id)
     return {"deleted": True}
+
+
+@app.post("/api/reels/{reel_id}/continue", status_code=202)
+async def continue_reel(reel_id: str):
+    old = _get_or_404(reel_id)
+    store = get_store()
+    if old.status != "failed":
+        raise ApiError(409, "not_failed", "This reel can only be continued after a failed generation.", True)
+    if old.understanding is None and not old.repo_url:
+        raise ApiError(409, "no_checkpoint", "There is no saved checkpoint to continue from.", True)
+    if store.active_count() >= get_settings().max_queue:
+        raise ApiError(429, "busy", "DevReel is busy right now. Please try again in a minute.", True)
+    store.update(
+        reel_id,
+        status="queued",
+        stage_label=STAGE_LABELS["queued"],
+        progress=max(0, old.progress),
+        error=None,
+    )
+    store.log(reel_id, "Continuing from the latest saved checkpoint")
+    _start(reel_id)
+    return store.get(reel_id).public()
 
 
 @app.post("/api/reels/{reel_id}/regenerate", status_code=202)
