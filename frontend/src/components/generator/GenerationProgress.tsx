@@ -42,6 +42,7 @@ export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompl
 
   const currentIdx = getStageIndex(reel.status);
   const currentStage = STAGES[Math.max(0, currentIdx)] ?? STAGES[0];
+  const CurrentStageIcon = currentStage.icon;
 
   const ACTIVITY_MESSAGES: Record<ReelStatus, string[]> = {
     queued: ['Preparing the generation pipeline...', 'Getting your project ready...'],
@@ -135,7 +136,7 @@ export const GenerationProgress: React.FC<Props> = ({ reel, onRetry, onViewCompl
             <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-[generation-shimmer_2.8s_ease-in-out_infinite]" />
             <div className="relative flex items-center gap-4">
               <div className="relative w-11 h-11 shrink-0 rounded-2xl neu-pressed flex items-center justify-center text-primary">
-                <currentStage.icon className="w-5 h-5" />
+                <CurrentStageIcon className="w-5 h-5" />
                 <span className="absolute inset-0 rounded-2xl border border-primary/30 animate-pulse" />
                 <span className="absolute -right-1 -top-1 flex gap-0.5">
                   <span className="w-1 h-1 rounded-full bg-primary animate-bounce" />
