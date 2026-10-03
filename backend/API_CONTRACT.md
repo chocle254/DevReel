@@ -22,7 +22,7 @@ The browser creates `session_id` (uuid) in localStorage and sends it as header
 | GET | `/api/reels/{id}/video` | The MP4 (supports Range → seeking works). `404` until completed |
 | GET | `/api/reels/{id}/thumbnail` | JPEG |
 | DELETE | `/api/reels/{id}` | Delete reel + media → `{ "deleted": true }`. `409 in_progress` while it is still generating |
-| POST | `/api/reels/{id}/regenerate` | New generation for the same repo → `202` new **Reel** (the original is kept) |
+| POST | `/api/reels/{id}/continue` | Resume a failed reel from its latest saved checkpoint → `202` same **Reel** |\n| POST | `/api/reels/{id}/regenerate` | New generation for the same repo → `202` new **Reel** (the original is kept) |
 | GET | `/api/render/{id}/scenes?token=…` | **Render-only.** All scenes (see §5) |
 | GET | `/api/render/{id}/scenes/{index}?token=…` | **Render-only.** One scene (see §5) |
 
@@ -60,7 +60,7 @@ Request validation errors at submit time: `400 invalid_url`, `429 busy` (queue f
 
 * `progress` is 0–100 and only moves forward.
 * `title/tagline/summary/understanding/scenes/chart` fill in as the job advances (null/[] before). Do not assume they exist until `planning` has passed.
-* `video_url` / `thumbnail_url` are absolute URLs, set only when `status == "completed"`.
+* `video_url` / `thumbnail_url` are absolute URLs, set only when `status == "completed"`.\n* A failed reel may be continued. The backend resumes from the furthest durable checkpoint (`understanding`, `scenes`, narration audio, soundtrack, or rendered clips) and does not intentionally repeat completed stages. `regenerate` remains the explicit start-over action.
 * `error` (only when `failed`): `{ "code": "...", "message": "...", "user_solvable": true|false }`.
   * User-solvable codes: `invalid_url`, `repo_not_found` (missing or private), `repo_too_large`, `repo_empty`.
   * Internal codes: `analysis_failed`, `ai_failed`, `narration_failed`, `render_failed`, `assembly_failed`, `internal`.
