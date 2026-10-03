@@ -14,7 +14,6 @@ import {
   Download,
   Trash2,
   Sparkles,
-  Subtitles,
   Music,
   Gauge,
   Layers,
@@ -50,7 +49,6 @@ export const ReelPlayer: React.FC<Props> = ({
   const [volume, setVolume] = useState(0.6);
   const [narrationEnabled, setNarrationEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
-  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
   const [sceneProgress, setSceneProgress] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -122,7 +120,7 @@ export const ReelPlayer: React.FC<Props> = ({
     return () => {
       audioPlayer.stopSoundtrack();
     };
-  }, [isPlaying, musicEnabled, isMuted, reel.music_track?.mood]);
+  }, [isPlaying, musicEnabled, isMuted, reel.music_track]);
 
   const togglePlay = () => {
     if (!isPlaying) {
