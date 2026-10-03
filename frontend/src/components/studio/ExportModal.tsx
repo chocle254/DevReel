@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Reel } from '@/types/contract';
+import { api } from '@/services/api';
 import { Download, FileJson, Copy, Check, Share2, Film, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -57,20 +58,26 @@ export const ExportModal: React.FC<Props> = ({ reel, isOpen, onClose }) => {
   };
 
   const handleExportVideo = () => {
+    if (reel.status !== 'completed') {
+      toast.error('The final MP4 is not ready yet.');
+      return;
+    }
+
     setIsExportingVideo(true);
-    toast.info('Synthesizing high-definition MP4 package with synchronized audio...');
-    setTimeout(() => {
-      setIsExportingVideo(false);
-      // Generate a mock download artifact if backend MP4 is still packaging
-      const dummy = new Blob(['DevReel MP4 Explainer Package for ' + reel.repo_name], { type: 'video/mp4' });
-      const url = URL.createObjectURL(dummy);
+    try {
+      const url = api.getVideoUrl(reel.id, reel);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${reel.repo_name.replace('/', '-')}-explainer.mp4`;
+      a.target = '_blank';
+      a.rel = 'noreferrer';
       a.click();
-      URL.revokeObjectURL(url);
       toast.success('DevReel explainer video download started!');
-    }, 2000);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not prepare the video download.');
+    } finally {
+      setIsExportingVideo(false);
+    }
   };
 
   return (
