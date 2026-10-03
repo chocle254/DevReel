@@ -67,7 +67,9 @@ async def run_reel(reel_id: str) -> None:
             log.error("reel %s crashed:\n%s", reel_id, traceback.format_exc())
             _fail(reel_id, "internal", "Something went wrong on our side. Please try again.", False)
         finally:
-            store.cleanup_work(reel_id)
+            reel = store.get(reel_id)
+            if reel and reel.status == "completed":
+                store.cleanup_work(reel_id)
 
 
 def _fail(reel_id: str, code: str, message: str, user_solvable: bool) -> None:
@@ -89,64 +91,86 @@ async def _run(reel_id: str) -> None:
     assert reel is not None
     work = store.work_dir(reel_id)
 
-    # ---------------------------------------------------------------- analyzing
-    _stage(reel_id, "analyzing", 3, "Checking the repository")
-    ref = github.parse_repo_url(reel.repo_url)
-    info = await asyncio.to_thread(github.fetch_repo_info, ref)
+    # Checkpoints are persisted in the reel record. A failed job resumes from
+    # the furthest durable artifact instead of repeating expensive AI work.
+    u = reel.understanding
+    plan = None
+    narrations = []
+    track_path = None
+    clips = []
 
-    _stage(reel_id, "analyzing", 6, f"Downloading {ref.name}")
-    repo_dir = work / "repo"
-    await asyncio.to_thread(github.clone_repo, ref, repo_dir)
+    # ------------------------------------------------------------- analyzing
+    if u is None:
+        _stage(reel_id, "analyzing", 3, "Checking the repository")
+        ref = github.parse_repo_url(reel.repo_url)
+        info = await asyncio.to_thread(github.fetch_repo_info, ref)
 
-    _stage(reel_id, "analyzing", 12, "Reading the codebase")
-    ev = await asyncio.to_thread(scanner.scan_repo, repo_dir, ref.name)
-    ev.description = info.description
-    store.log(reel_id, f"Found {ev.total_files} files; studying {len(ev.files)} key files")
+        _stage(reel_id, "analyzing", 6, f"Downloading {ref.name}")
+        repo_dir = work / "repo"
+        await asyncio.to_thread(github.clone_repo, ref, repo_dir)
 
-    _stage(reel_id, "analyzing", 16, "Understanding what the project does")
-    u = await understanding.understand(ev)
-    store.update(reel_id, understanding=u, chart=u.flow, repo_name=ref.name)
-    _stage(reel_id, "analyzing", 30, f"Understood {u.name}: {u.one_liner}")
+        _stage(reel_id, "analyzing", 12, "Reading the codebase")
+        ev = await asyncio.to_thread(scanner.scan_repo, repo_dir, ref.name)
+        ev.description = info.description
+        store.log(reel_id, f"Found {ev.total_files} files; studying {len(ev.files)} key files")
 
-    # ----------------------------------------------------------------- planning
-    _stage(reel_id, "planning", 32, "Writing the story")
-    plan = await story.plan_story(u)
-    store.update(
-        reel_id,
-        title=plan.title,
-        tagline=plan.tagline,
-        summary=plan.summary,
-        scenes=plan.scenes,
-    )
-    _stage(reel_id, "planning", 45, f"Story ready: {len(plan.scenes)} scenes")
+        _stage(reel_id, "analyzing", 16, "Understanding what the project does")
+        u = await understanding.understand(ev)
+        store.update(reel_id, understanding=u, chart=u.flow, repo_name=ref.name)
+        _stage(reel_id, "analyzing", 30, f"Understood {u.name}: {u.one_liner}")
+    else:
+        store.log(reel_id, "Resuming from saved project understanding")
+        _stage(reel_id, "analyzing", 30, "Using saved project understanding")
 
-    # ---------------------------------------------------------------- narration
-    _stage(reel_id, "generating_narration", 46, "Recording the narration")
+    # ---------------------------------------------------------------- planning
+    if reel.scenes:
+        # Scenes are a durable checkpoint; reconstruct the plan without another AI call.
+        plan = story.StoryPlan(
+            title=reel.title or u.name,
+            tagline=reel.tagline or "",
+            summary=reel.summary or u.one_liner,
+            music_mood=reel.music_track or "cinematic",
+            scenes=reel.scenes,
+        )
+        store.log(reel_id, f"Resuming with saved story ({len(plan.scenes)} scenes)")
+    else:
+        _stage(reel_id, "planning", 32, "Writing the story")
+        plan = await story.plan_story(u)
+        store.update(
+            reel_id,
+            title=plan.title,
+            tagline=plan.tagline,
+            summary=plan.summary,
+            scenes=plan.scenes,
+        )
+        _stage(reel_id, "planning", 45, f"Story ready: {len(plan.scenes)} scenes")
 
+    # --------------------------------------------------------------- narration
+    _stage(reel_id, "generating_narration", 46, "Preparing the narration")
     def narr_progress(done: int, total: int) -> None:
         store.update(reel_id, progress=_scaled(46, 58, done, total))
 
-    narrations = await tts.narrate(plan.scenes, work / "audio", on_progress=narr_progress)
+    narrations = await tts.narrate(plan.scenes, work / "audio", on_progress=narr_progress, resume=True)
     total = round(sum(sc.duration_seconds for sc in plan.scenes), 1)
-    store.update(reel_id, scenes=plan.scenes, duration_seconds=total)  # durations are final now
-    store.log(reel_id, f"Narration done ({total}s of video)")
+    store.update(reel_id, scenes=plan.scenes, duration_seconds=total)
+    store.log(reel_id, f"Narration ready ({total}s of video)")
 
     # -------------------------------------------------------------------- music
     _stage(reel_id, "selecting_music", 59, "Choosing background music")
-    track_id, track_path = await asyncio.to_thread(music.select_track, plan.music_mood)
+    mood = plan.music_mood or "cinematic"
+    track_id, track_path = await asyncio.to_thread(music.select_track, mood)
     store.update(reel_id, music_track=track_id)
     store.log(reel_id, f"Music: {track_id}")
 
     # ---------------------------------------------------------------- rendering
     _stage(reel_id, "rendering", 62, "Rendering scenes")
     token = make_render_token(reel_id)
-
     def render_progress(done: int, total_scenes: int) -> None:
         store.update(reel_id, progress=_scaled(62, 88, done, total_scenes))
         store.log(reel_id, f"Rendered scene {done} of {total_scenes}")
 
     clips = await asyncio.to_thread(
-        capture.capture_scenes, reel_id, plan.scenes, work / "clips", token, render_progress
+        capture.capture_scenes, reel_id, plan.scenes, work / "clips", token, render_progress, True
     )
 
     # --------------------------------------------------------------- assembling
@@ -172,6 +196,7 @@ async def _run(reel_id: str) -> None:
         status="completed",
         stage_label=STAGE_LABELS["completed"],
         progress=100,
+        error=None,
     )
     store.log(reel_id, "Your reel is ready")
     log.info("reel %s completed (%.1fs)", reel_id[:8], duration)
