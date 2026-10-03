@@ -18,7 +18,6 @@ import {
     CurrentTimeDisplay,
     TimeDivider,
     DurationDisplay,
-    FullscreenToggle,
     VolumeMenuButton,
     ProgressControl
 } from 'video-react';
