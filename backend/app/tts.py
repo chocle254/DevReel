@@ -54,12 +54,14 @@ async def synthesize_scene(scene: Scene, out_dir: Path) -> Path:
     return out
 
 
-async def narrate(scenes: list[Scene], out_dir: Path, on_progress=None) -> list[Path]:
+async def narrate(scenes: list[Scene], out_dir: Path, on_progress=None, resume: bool = False) -> list[Path]:
     """Generate narration for each scene, set scene.duration_seconds from the real audio length."""
     out_dir.mkdir(parents=True, exist_ok=True)
     paths: list[Path] = []
     for i, sc in enumerate(scenes):
-        path = await synthesize_scene(sc, out_dir)
+        path = out_dir / f"narration_{sc.index}.mp3"
+        if not (resume and path.exists() and path.stat().st_size >= 500):
+            path = await synthesize_scene(sc, out_dir)
         dur = probe_duration(path)
         if dur <= 0.3:
             raise PipelineError("narration_failed", "The narration audio was invalid. Please try again.", False)
