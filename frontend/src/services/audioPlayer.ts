@@ -12,8 +12,6 @@ class AudioPlayerService {
   private currentVolume = 0.5;
   private isMuted = false;
   private synth: SpeechSynthesis | null = null;
-  private currentUtterance: SpeechSynthesisUtterance | null = null;
-  private isSpeechActive = false;
   private voicePreference: SpeechSynthesisVoice | null = null;
 
   constructor() {
@@ -156,8 +154,6 @@ class AudioPlayerService {
     utterance.volume = this.isMuted ? 0 : this.currentVolume;
 
     utterance.onend = () => {
-      this.isSpeechActive = false;
-      this.currentUtterance = null;
       // Restore background music volume
       if (this.musicGainNode && this.audioCtx) {
         this.musicGainNode.gain.setTargetAtTime(0.18, this.audioCtx.currentTime, 0.4);
@@ -174,8 +170,6 @@ class AudioPlayerService {
       if (onEnd) onEnd();
     };
 
-    this.currentUtterance = utterance;
-    this.isSpeechActive = true;
     this.synth.speak(utterance);
   }
 
@@ -183,8 +177,6 @@ class AudioPlayerService {
     if (this.synth) {
       this.synth.cancel();
     }
-    this.isSpeechActive = false;
-    this.currentUtterance = null;
   }
 
   public setVolume(vol: number) {
