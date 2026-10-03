@@ -162,8 +162,6 @@ class AudioPlayerService {
     };
 
     utterance.onerror = () => {
-      this.isSpeechActive = false;
-      this.currentUtterance = null;
       if (this.musicGainNode && this.audioCtx) {
         this.musicGainNode.gain.setTargetAtTime(0.18, this.audioCtx.currentTime, 0.4);
       }
